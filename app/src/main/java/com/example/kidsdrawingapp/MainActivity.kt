@@ -1,69 +1,94 @@
 package com.example.kidsdrawingapp
 
-import android.app.Dialog
+import android.app.AlertDialog
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageButton
-import android.widget.LinearLayout
+import android.widget.Button
 import android.widget.Toast
-import androidx.core.content.ContextCompat
-import androidx.core.view.get
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : AppCompatActivity() {
-    private var drawingView : DrawingView? = null
-    private var mImageButtonCurrentPaint : ImageButton? = null
+    private val cameraResultLauncher : ActivityResultLauncher<String> =
+        registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ){
+            isGranted -> 
+            if(isGranted){
+                Toast.makeText(this, "Permission granted for camera.", Toast.LENGTH_SHORT).show()
+            }else{
+                Toast.makeText(this, "Permission denied for camera.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    private val cameraAndLocationResultLauncher : ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ){
+                permission ->
+            permission.entries.forEach {
+                val permissionName = it.key
+                val isGranted = it.value
+                if(isGranted){
+                    if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
+                        Toast.makeText(this, "Permission granted for location", Toast.LENGTH_SHORT)
+                            .show()
+                    }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
+                        Toast.makeText(this, "Permission granted for coarse location", Toast.LENGTH_SHORT)
+                            .show()
+                    } else{
+                        Toast.makeText(this, "Permission granted for camera", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }else{
+                    if(isGranted){
+                        if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
+                            Toast.makeText(this, "Permission denied for fine location", Toast.LENGTH_SHORT)
+                                .show()
+                        }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
+                            Toast.makeText(this, "Permission denied for coarse location", Toast.LENGTH_SHORT)
+                                .show()
+                        } else{
+                            Toast.makeText(this, "Permission denied for camera", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                }
+            }
+        }
+        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        drawingView = findViewById(R.id.drawing_view)
-        //drawingView?.setSizeForBrush(20F)
-        val linearLayoutPaintColors = findViewById<LinearLayout>(R.id.ll_paint_colors)
-        mImageButtonCurrentPaint = linearLayoutPaintColors[2] as ImageButton
-//        mImageButtonCurrentPaint!!.setImageDrawable(
-//            ContextCompat.getDrawable(this,R.drawable.pallet_pressed)
-//        )
-        var ib_brush : ImageButton = findViewById(R.id.ib_brush)
-        ib_brush.setOnClickListener {
-            showBrushSizeChooserDialog()
+        val btnCameraPermission : Button = findViewById(R.id.btnCameraPermission)
+        btnCameraPermission.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
+                showRationaleDialog("Permission Demo requires camera access",
+                "Camera cannot be used because Camera access is denied")
+            }else{
+                cameraAndLocationResultLauncher.launch(
+                    arrayOf(
+                        android.Manifest.permission.CAMERA,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }
         }
     }
-    private fun showBrushSizeChooserDialog(){
-        val brushDialog = Dialog(this)
-        brushDialog.setContentView(R.layout.dialog_brush_size)
-        brushDialog.setTitle("Brush size :")
-        val smallBtn : ImageButton = brushDialog.findViewById(R.id.ib_small_brush)
-        val mediumBtn : ImageButton = brushDialog.findViewById(R.id.ib_medium_brush)
-        val largeBtn : ImageButton = brushDialog.findViewById(R.id.ib_large_brush)
-        smallBtn.setOnClickListener {
-            drawingView?.setSizeForBrush(10F)
-            brushDialog.dismiss()
-        }
-        mediumBtn.setOnClickListener {
-            drawingView?.setSizeForBrush(20F)
-            brushDialog.dismiss()
-        }
-        largeBtn.setOnClickListener {
-            drawingView?.setSizeForBrush(30F)
-            brushDialog.dismiss()
-        }
-        brushDialog.show()
-    }
-
-    fun paintClicked(view : View){
-        if (view !== mImageButtonCurrentPaint){
-            val imageButton = view as ImageButton
-            val colorTag = imageButton.tag.toString()
-            drawingView?.setColor(colorTag)
-
-            imageButton.setImageDrawable(
-                ContextCompat.getDrawable(this,R.drawable.pallet_pressed)
-            )
-
-            mImageButtonCurrentPaint?.setImageDrawable(
-                ContextCompat.getDrawable(this,R.drawable.pallet_normal)
-            )
-            mImageButtonCurrentPaint = view
-        }
+    /**
+     * Shows rationale dialog for displaying why the app needs permission
+     * Only shown if the user has denied the permission request previously
+     */
+    private fun showRationaleDialog(
+        title: String,
+        message: String,
+    ) {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+        builder.setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+        builder.create().show()
     }
 }
