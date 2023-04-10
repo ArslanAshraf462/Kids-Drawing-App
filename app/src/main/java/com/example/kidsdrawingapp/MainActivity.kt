@@ -1,94 +1,78 @@
 package com.example.kidsdrawingapp
 
-import android.app.AlertDialog
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
-    private val cameraResultLauncher : ActivityResultLauncher<String> =
-        registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ){
-            isGranted -> 
-            if(isGranted){
-                Toast.makeText(this, "Permission granted for camera.", Toast.LENGTH_SHORT).show()
-            }else{
-                Toast.makeText(this, "Permission denied for camera.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    private val cameraAndLocationResultLauncher : ActivityResultLauncher<Array<String>> =
-        registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ){
-                permission ->
-            permission.entries.forEach {
-                val permissionName = it.key
-                val isGranted = it.value
-                if(isGranted){
-                    if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
-                        Toast.makeText(this, "Permission granted for location", Toast.LENGTH_SHORT)
-                            .show()
-                    }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
-                        Toast.makeText(this, "Permission granted for coarse location", Toast.LENGTH_SHORT)
-                            .show()
-                    } else{
-                        Toast.makeText(this, "Permission granted for camera", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }else{
-                    if(isGranted){
-                        if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
-                            Toast.makeText(this, "Permission denied for fine location", Toast.LENGTH_SHORT)
-                                .show()
-                        }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
-                            Toast.makeText(this, "Permission denied for coarse location", Toast.LENGTH_SHORT)
-                                .show()
-                        } else{
-                            Toast.makeText(this, "Permission denied for camera", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                }
-            }
-        }
-        }
+
+    /**
+     * This method is autocreated by Android when the Activity Class is created.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
+        //This call the parent constructor
         super.onCreate(savedInstanceState)
+
+        // This is used to align the xml view to this class
         setContentView(R.layout.activity_main)
-        val btnCameraPermission : Button = findViewById(R.id.btnCameraPermission)
-        btnCameraPermission.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                    shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
-                showRationaleDialog("Permission Demo requires camera access",
-                "Camera cannot be used because Camera access is denied")
-            }else{
-                cameraAndLocationResultLauncher.launch(
-                    arrayOf(
-                        android.Manifest.permission.CAMERA,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
-            }
+
+        /**
+         * Here we have handled onclick of ImageButton. And we have used SnackBar to notify.
+         */
+        val imageButton:ImageButton = findViewById(R.id.image_button)
+        imageButton.setOnClickListener { view ->
+            Snackbar.make(view, "You have clicked image button.", Snackbar.LENGTH_LONG).show()
+        }
+
+        /**
+         * Here we have handled onClick of Alert Dialog Button.
+         */
+        val btnAlertDialog: Button = findViewById(R.id.btn_alert_dialog)
+        btnAlertDialog.setOnClickListener { view ->
+
+            //Launch Alert Dialog
+            alertDialogFunction()
         }
     }
+
     /**
-     * Shows rationale dialog for displaying why the app needs permission
-     * Only shown if the user has denied the permission request previously
+     * Method is used to show the Alert Dialog.
      */
-    private fun showRationaleDialog(
-        title: String,
-        message: String,
-    ) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        builder.setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-        builder.create().show()
+    private fun alertDialogFunction() {
+        val builder = AlertDialog.Builder(this)
+        //set title for alert dialog
+        builder.setTitle("Alert")
+        //set message for alert dialog
+        builder.setMessage("This is Alert Dialog. Which is used to show alerts in our app.")
+        builder.setIcon(android.R.drawable.ic_dialog_alert)
+
+        //performing positive action
+        builder.setPositiveButton("Yes") { dialogInterface, which ->
+            Toast.makeText(applicationContext, "clicked yes", Toast.LENGTH_LONG).show()
+            dialogInterface.dismiss() // Dialog will be dismissed
+        }
+        //performing cancel action
+        builder.setNeutralButton("Cancel") { dialogInterface, which ->
+            Toast.makeText(
+                applicationContext,
+                "clicked cancel\n operation cancel",
+                Toast.LENGTH_LONG
+            ).show()
+            dialogInterface.dismiss() // Dialog will be dismissed
+        }
+        //performing negative action
+        builder.setNegativeButton("No") { dialogInterface, which ->
+            Toast.makeText(applicationContext, "clicked No", Toast.LENGTH_LONG).show()
+            dialogInterface.dismiss() // Dialog will be dismissed
+        }
+        // Create the AlertDialog
+        val alertDialog: AlertDialog = builder.create()
+        // Set other dialog properties
+        alertDialog.setCancelable(false) // Will not allow user to cancel after clicking on remaining screen area.
+        alertDialog.show()  // show the dialog to UI
     }
 }
