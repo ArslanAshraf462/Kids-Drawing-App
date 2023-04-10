@@ -1,94 +1,77 @@
 package com.example.kidsdrawingapp
 
-import android.app.AlertDialog
-import android.os.Build
+import android.app.Dialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
-    private val cameraResultLauncher : ActivityResultLauncher<String> =
-        registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ){
-            isGranted -> 
-            if(isGranted){
-                Toast.makeText(this, "Permission granted for camera.", Toast.LENGTH_SHORT).show()
-            }else{
-                Toast.makeText(this, "Permission denied for camera.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    private val cameraAndLocationResultLauncher : ActivityResultLauncher<Array<String>> =
-        registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ){
-                permission ->
-            permission.entries.forEach {
-                val permissionName = it.key
-                val isGranted = it.value
-                if(isGranted){
-                    if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
-                        Toast.makeText(this, "Permission granted for location", Toast.LENGTH_SHORT)
-                            .show()
-                    }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
-                        Toast.makeText(this, "Permission granted for coarse location", Toast.LENGTH_SHORT)
-                            .show()
-                    } else{
-                        Toast.makeText(this, "Permission granted for camera", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }else{
-                    if(isGranted){
-                        if(permissionName == android.Manifest.permission.ACCESS_FINE_LOCATION){
-                            Toast.makeText(this, "Permission denied for fine location", Toast.LENGTH_SHORT)
-                                .show()
-                        }else if(permissionName == android.Manifest.permission.ACCESS_COARSE_LOCATION){
-                            Toast.makeText(this, "Permission denied for coarse location", Toast.LENGTH_SHORT)
-                                .show()
-                        } else{
-                            Toast.makeText(this, "Permission denied for camera", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                }
-            }
-        }
-        }
+
+    //Create a dialog variable
+    private var customProgressDialog: Dialog? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val btnCameraPermission : Button = findViewById(R.id.btnCameraPermission)
-        btnCameraPermission.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                    shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
-                showRationaleDialog("Permission Demo requires camera access",
-                "Camera cannot be used because Camera access is denied")
-            }else{
-                cameraAndLocationResultLauncher.launch(
-                    arrayOf(
-                        android.Manifest.permission.CAMERA,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
+
+        val btnExecute:Button = findViewById(R.id.btn_execute)
+        btnExecute.setOnClickListener {
+            showProgressDialog()
+            lifecycleScope.launch {
+                execute("Task executed successfully.")
+            }
+        }
+
+    }
+
+
+    private suspend fun execute(result:String){
+        //TODO(You can code here what you wants to execute in background execution without freezing the UI
+        withContext(Dispatchers.IO) {
+            // This is just a for loop which is executed for 1000000 times.
+            for (i in 1..1000000) {
+                Log.e("delay : ", "" + i)
+            }
+            runOnUiThread {
+                cancelProgressDialog()
+                Toast.makeText(
+                    this@MainActivity, result,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
+
     /**
-     * Shows rationale dialog for displaying why the app needs permission
-     * Only shown if the user has denied the permission request previously
+     * Method is used to show the Custom Progress Dialog.
      */
-    private fun showRationaleDialog(
-        title: String,
-        message: String,
-    ) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        builder.setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-        builder.create().show()
+    private fun showProgressDialog() {
+        customProgressDialog = Dialog(this@MainActivity)
+
+        /*Set the screen content from a layout resource.
+        The resource will be inflated, adding all top-level views to the screen.*/
+        customProgressDialog?.setContentView(R.layout.dialog_custom_progress)
+
+        //Start the dialog and display it on screen.
+        customProgressDialog?.show()
     }
+
+
+    /**
+     * This function is used to dismiss the progress dialog if it is visible to user.
+     */
+    private fun cancelProgressDialog() {
+        if (customProgressDialog != null) {
+            customProgressDialog?.dismiss()
+            customProgressDialog = null
+        }
+    }
+
+
+
 }
