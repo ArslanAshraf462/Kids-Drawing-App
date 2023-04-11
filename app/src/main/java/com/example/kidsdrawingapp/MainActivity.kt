@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                     mBitmap.compress(Bitmap.CompressFormat.PNG,90,byte)
 
                     val f = File(externalCacheDir?.absoluteFile.toString() +
-                    File.separator + "KidDrawingApp_" + System.currentTimeMillis()/1000 + ".png"
+                    File.separator + "KidDrawingApp_" + System.currentTimeMillis()/1000 + ".jpg"
                     )
                     val fo = FileOutputStream(f)
                     fo.write(byte.toByteArray())
@@ -214,6 +214,12 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread { 
                         if(result.isNotEmpty()){
                             Toast.makeText(this@MainActivity, "File save successfully", Toast.LENGTH_SHORT).show()
+                        }else {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Something went wrong while saving the file.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }catch (e: Exception){

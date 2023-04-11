@@ -30,16 +30,16 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        
+
         <provider
-            android:authorities="com.example.kidsdrawingapp.fileprovider"
             android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.kidsdrawingapp.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true"
-            />
-        <meta-data
-            android:name="android.support.FILE_PROVIDER_PATHS"
-            android:resource="@xml/path"/>
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/path" />
+        </provider>
     </application>
 
 </manifest>
